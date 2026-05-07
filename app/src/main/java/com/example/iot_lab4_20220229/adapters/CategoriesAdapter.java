@@ -14,22 +14,34 @@ import com.example.iot_lab4_20220229.dto.Category;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class CategoriesAdapter extends RecyclerView.Adapter<CategoriesAdapter.CategoryViewHolder> {
 
-    private final List<Category> categoryList;
+    public interface OnCategoryClickListener {
+        void onCategoryClick(Category category);
+    }
 
-    public CategoriesAdapter(List<Category> categoryList) {
+    private final List<Category> categoryList;
+    private final OnCategoryClickListener listener;
+
+    private static final ExecutorService executorService =
+            Executors.newFixedThreadPool(4);
+
+    private static final HashMap<String, Bitmap> imageCache =
+            new HashMap<>();
+
+    public CategoriesAdapter(List<Category> categoryList, OnCategoryClickListener listener) {
         this.categoryList = categoryList;
+        this.listener = listener;
     }
 
     @NonNull
     @Override
     public CategoryViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-
         ItemCategoryBinding binding = ItemCategoryBinding.inflate(
                 LayoutInflater.from(parent.getContext()),
                 parent,
@@ -41,12 +53,14 @@ public class CategoriesAdapter extends RecyclerView.Adapter<CategoriesAdapter.Ca
 
     @Override
     public void onBindViewHolder(@NonNull CategoryViewHolder holder, int position) {
-
         Category category = categoryList.get(position);
 
         holder.binding.textViewCategoryName.setText(category.getStrCategory());
+        holder.binding.imageViewCategory.setImageBitmap(null);
 
         cargarImagen(category.getStrCategoryThumb(), holder);
+
+        holder.itemView.setOnClickListener(v -> listener.onCategoryClick(category));
     }
 
     @Override
@@ -65,13 +79,15 @@ public class CategoriesAdapter extends RecyclerView.Adapter<CategoriesAdapter.Ca
     }
 
     private void cargarImagen(String imageUrl, CategoryViewHolder holder) {
+        Bitmap cachedBitmap = imageCache.get(imageUrl);
 
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        if (cachedBitmap != null) {
+            holder.binding.imageViewCategory.setImageBitmap(cachedBitmap);
+            return;
+        }
 
         executorService.execute(() -> {
-
             try {
-
                 URL url = new URL(imageUrl);
 
                 HttpURLConnection connection =
@@ -80,9 +96,9 @@ public class CategoriesAdapter extends RecyclerView.Adapter<CategoriesAdapter.Ca
                 connection.connect();
 
                 InputStream inputStream = connection.getInputStream();
+                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
 
-                Bitmap bitmap =
-                        BitmapFactory.decodeStream(inputStream);
+                imageCache.put(imageUrl, bitmap);
 
                 holder.binding.imageViewCategory.post(() ->
                         holder.binding.imageViewCategory.setImageBitmap(bitmap));

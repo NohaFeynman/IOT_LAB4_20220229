@@ -3,11 +3,11 @@
     <string name="main_title">GastroApp</string>
     <string name="main_subtitle">Explora categorías, platos y recetas del mundo</string>
     <string name="btn_ingresar">Ingresar</string>
-    <string name="author_text">Elaborado por: Tu Nombre / 20220229</string>
+    <string name="author_text">Elaborado por: Nilton Condori / 20220229</string>
 
-    <string name="nav_categories">Categorías</string>
-    <string name="nav_meals">Platos</string>
-    <string name="nav_recipe">Detalle</string>
+    <string name="nav_categories">Categories</string>
+    <string name="nav_meals">Meals</string>
+    <string name="nav_recipe">Recipe</string>
 
     <string name="no_internet_title">Sin conexión a Internet</string>
     <string name="no_internet_message">No se puede ingresar a la aplicación sin conexión. Verifica tu configuración de red.</string>
