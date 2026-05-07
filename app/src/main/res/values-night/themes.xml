@@ -1,0 +1,13 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="Theme.Iot_lab4_20220229" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/blue_primary</item>
+        <item name="colorPrimaryVariant">@color/blue_primary_dark</item>
+        <item name="colorSecondary">@color/blue_secondary</item>
+        <item name="android:windowBackground">@color/blue_background</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:statusBarColor">@color/blue_primary_dark</item>
+        <item name="android:navigationBarColor">@color/blue_primary_dark</item>
+    </style>
+
+</resources>
