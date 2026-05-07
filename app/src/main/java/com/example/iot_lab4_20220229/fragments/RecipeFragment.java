@@ -1,66 +1,158 @@
 package com.example.iot_lab4_20220229.fragments;
 
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
-import com.example.iot_lab4_20220229.R;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link RecipeFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import com.example.iot_lab4_20220229.databinding.FragmentRecipeBinding;
+import com.example.iot_lab4_20220229.dto.Recipe;
+import com.example.iot_lab4_20220229.dto.RecipeResponse;
+import com.example.iot_lab4_20220229.services.MealDbService;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
 public class RecipeFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    private FragmentRecipeBinding binding;
+    private MealDbService service;
 
     public RecipeFragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment RecipeFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static RecipeFragment newInstance(String param1, String param2) {
-        RecipeFragment fragment = new RecipeFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public View onCreateView(
+            LayoutInflater inflater,
+            ViewGroup container,
+            Bundle savedInstanceState
+    ) {
+        binding = FragmentRecipeBinding.inflate(inflater, container, false);
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onViewCreated(
+            @NonNull View view,
+            @Nullable Bundle savedInstanceState
+    ) {
+        super.onViewCreated(view, savedInstanceState);
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://www.themealdb.com/api/json/v1/1/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        service = retrofit.create(MealDbService.class);
+
         if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+            String mealId = getArguments().getString("mealId");
+
+            if (mealId != null && !mealId.isEmpty()) {
+                binding.editTextMealId.setText(mealId);
+                obtenerRecetaPorId(mealId);
+            }
         }
+
+        binding.buttonBuscarRecipe.setOnClickListener(v -> {
+            String mealId = binding.editTextMealId
+                    .getText()
+                    .toString()
+                    .trim();
+
+            if (!TextUtils.isEmpty(mealId)) {
+                obtenerRecetaPorId(mealId);
+            } else {
+                Toast.makeText(
+                        requireContext(),
+                        "Ingrese un ID de plato",
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        });
+    }
+
+    private void obtenerRecetaPorId(String mealId) {
+        service.getRecipeById(mealId).enqueue(new Callback<RecipeResponse>() {
+            @Override
+            public void onResponse(
+                    @NonNull Call<RecipeResponse> call,
+                    @NonNull Response<RecipeResponse> response
+            ) {
+                if (response.isSuccessful()
+                        && response.body() != null
+                        && response.body().getMeals() != null
+                        && !response.body().getMeals().isEmpty()) {
+
+                    Recipe recipe = response.body().getMeals().get(0);
+                    mostrarReceta(recipe);
+
+                } else {
+                    Toast.makeText(
+                            requireContext(),
+                            "No se encontró la receta",
+                            Toast.LENGTH_SHORT
+                    ).show();
+                }
+            }
+
+            @Override
+            public void onFailure(
+                    @NonNull Call<RecipeResponse> call,
+                    @NonNull Throwable t
+            ) {
+                Toast.makeText(
+                        requireContext(),
+                        "Error al obtener receta",
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        });
+    }
+
+    private void mostrarReceta(Recipe recipe) {
+        binding.textViewRecipeName.setText(recipe.getStrMeal());
+
+        binding.textViewRecipeCategory.setText(
+                "Categoría: " + recipe.getStrCategory()
+        );
+
+        binding.textViewRecipeArea.setText(
+                "Origen: " + recipe.getStrArea()
+        );
+
+        binding.textViewRecipeIngredients.setText(
+                "Ingredientes:\n"
+                        + "- " + validarTexto(recipe.getStrIngredient1()) + "\n"
+                        + "- " + validarTexto(recipe.getStrIngredient2()) + "\n"
+                        + "- " + validarTexto(recipe.getStrIngredient3())
+        );
+
+        binding.textViewRecipeInstructions.setText(
+                "Instrucciones:\n" + validarTexto(recipe.getStrInstructions())
+        );
+    }
+
+    private String validarTexto(String texto) {
+        if (texto == null || texto.trim().isEmpty()) {
+            return "No disponible";
+        }
+
+        return texto;
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_recipe, container, false);
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 }
