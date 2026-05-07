@@ -14,8 +14,8 @@ Laboratorio 4 del curso Servicios y Aplicaciones para IoT.
 
 ## Video demostrativo
 
-https://youtube.com/...
+https://youtu.be/2stoTZJgpBo
 
 ## Registro de uso de IA
 
-El archivo `Registro_IA_LAB4.xlsx` contiene el registro de uso de herramientas de IA durante el desarrollo del laboratorio.
+El archivo `Lab4_20220229_Registro de uso de IA` contiene el registro de uso de herramientas de IA durante el desarrollo del laboratorio.
